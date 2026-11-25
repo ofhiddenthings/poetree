@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Poem tree</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="map"><div class="canvas" id="canvas"><svg id="svg" aria-hidden="true"></svg></div></div>
+<p class="note" id="note" style="padding:0 32px 32px"></p>
+
+<script src="config.js"></script>
+<script src="data.js"></script>
+<script>
+(async function () {
+  const { list, sample } = await loadPoems();
+  if (sample) document.getElementById("note").textContent =
+    "Showing sample poems. Connect your sheet in config.js.";
+
+  const S = 160, GX = 24, GY = 56, NS = "http://www.w3.org/2000/svg";
+  const roots = list.filter(p => !p.parentPoem);
+  let leaf = 0;
+  function lay(p, d) {
+    p.y = d * (S + GY);
+    if (!p.kids.length) p.x = leaf++ * (S + GX);
+    else { p.kids.forEach(k => lay(k, d + 1)); p.x = (p.kids[0].x + p.kids[p.kids.length - 1].x) / 2; }
+  }
+  roots.forEach(r => lay(r, 0));
+
+  const canvas = document.getElementById("canvas"), svg = document.getElementById("svg");
+  const cw = Math.max(1, leaf) * (S + GX) - GX, ch = Math.max(...list.map(p => p.y)) + S;
+  canvas.style.width = cw + "px"; canvas.style.height = ch + "px";
+  svg.setAttribute("width", cw); svg.setAttribute("height", ch);
+
+  list.forEach(p => {
+    const a = document.createElement("a");
+    a.className = "box";
+    a.href = "poem.html?id=" + encodeURIComponent(p.id);
+    a.style.cssText = `left:${p.x}px;top:${p.y}px;width:${S}px;height:${S}px`;
+    const b = document.createElement("b"); b.textContent = p.title;
+    const t = document.createElement("p"); t.textContent = p.poem;
+    a.append(b, t); canvas.appendChild(a);
+
+    p.kids.forEach(k => {
+      const x1 = p.x + S / 2, y1 = p.y + S, x2 = k.x + S / 2, y2 = k.y - 1, m = (y1 + y2) / 2;
+      const path = document.createElementNS(NS, "path");
+      path.setAttribute("d", `M${x1} ${y1}C${x1} ${m} ${x2} ${m} ${x2} ${y2 - 7}`);
+      const h = document.createElementNS(NS, "polygon");
+      h.setAttribute("points", `${x2},${y2} ${x2 - 4},${y2 - 8} ${x2 + 4},${y2 - 8}`);
+      svg.append(path, h);
+    });
+  });
+})();
+</script>
+</body>
+</html>

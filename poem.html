@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Poem</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="main"><nav><a href="index.html">Back to the tree</a></nav></main>
+
+<script src="config.js"></script>
+<script src="data.js"></script>
+<script>
+(async function () {
+  const main = document.getElementById("main");
+  const { byId, sample } = await loadPoems();
+  const id = new URLSearchParams(location.search).get("id");
+  const p = byId[id];
+
+  function add(tag, text, cls) {
+    const e = document.createElement(tag);
+    if (text !== undefined) e.textContent = text;
+    if (cls) e.className = cls;
+    main.appendChild(e); return e;
+  }
+
+  if (!p) { add("h1", "Poem not found"); return; }
+  document.title = p.title;
+
+  add("h1", p.title);
+  add("p", p.author ? "by " + p.author : "", "by");
+  add("p", p.poem, "poem");
+
+  if (p.parentPoem) {
+    add("h2", "The rule this poem followed");
+    add("p", p.parentPoem.rule, "rule");
+    const f = add("p", "", "note");
+    const a = document.createElement("a");
+    a.href = "poem.html?id=" + encodeURIComponent(p.parentPoem.id);
+    a.textContent = "From: " + p.parentPoem.title;
+    f.appendChild(a);
+  }
+
+  add("h2", "Rule for the poems that follow");
+  add("p", p.rule, "rule");
+
+  if (p.kids.length) {
+    add("h2", "Poems that followed");
+    const ul = add("ul");
+    p.kids.forEach(k => {
+      const li = document.createElement("li"), a = document.createElement("a");
+      a.href = "poem.html?id=" + encodeURIComponent(k.id);
+      a.textContent = k.title + (k.author ? " (" + k.author + ")" : "");
+      li.appendChild(a); ul.appendChild(li);
+    });
+  }
+
+  add("h2", "Write a poem that follows this rule");
+  if (CONFIG.formUrl && CONFIG.formParentField) {
+    const sep = CONFIG.formUrl.includes("?") ? "&" : "?";
+    const src = CONFIG.formUrl + sep + "embedded=true&" +
+      encodeURIComponent(CONFIG.formParentField) + "=" + encodeURIComponent(p.id);
+    const fr = add("iframe"); fr.src = src; fr.title = "Submit a poem";
+    const n = add("p", "", "note");
+    const a = document.createElement("a"); a.href = src; a.textContent = "Open the form in its own page";
+    n.appendChild(a);
+  } else {
+    add("p", "The submission form isn’t connected yet. Add your form details in config.js.", "note");
+  }
+  if (sample) add("p", "Showing sample poems.", "note");
+  add("hr");
+})();
+</script>
+</body>
+</html>
