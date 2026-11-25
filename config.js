@@ -4,14 +4,14 @@
 const CONFIG = {
   /* The "Publish to web" CSV link of your Public tab (see README.txt, step 5).
      Leave empty to show the sample poems below. */
-  sheetCsvUrl: "",
+  sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS44qZxrw_ab1hm1asveMD24Wd1mbZch3z3p8aBVBD11EtBmCZ0b_PolY7XCQ9zpgIaHaoaDo2Uuya3/pub?gid=354856485&single=true&output=csv",
 
   /* Your Google Form's link, ending in /viewform (README.txt, step 7). */
-  formUrl: "",
+  formUrl: "https://docs.google.com/forms/d/e/1FAIpQLSfE2Q9Z5hmomPzjHa5MCfhGa8GeExlbuMtiPM_R9scjo2fakA/viewform",
 
   /* The code Google gives the "Parent" question in a pre-filled link,
      which looks like entry.123456789 */
-  formParentField: ""
+  formParentField: "entry.1286733289"
 };
 
 /* Sample poems so you can see the site working. They disappear
