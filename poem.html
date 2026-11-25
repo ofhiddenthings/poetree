@@ -4,73 +4,92 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Poem</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
-<main id="main"><nav><a href="index.html">Back to the tree</a></nav></main>
+<main>
+  <nav><a href="index.html">Back to the tree</a></nav>
+  <div id="top"></div>
+  <div id="form"></div>
+  <div id="foot"></div>
+</main>
 
 <script src="config.js"></script>
-<script src="data.js"></script>
+<script src="data.js?v=6"></script>
 <script>
-(async function () {
-  const main = document.getElementById("main");
-  const { byId, sample } = await loadPoems();
-  const id = new URLSearchParams(location.search).get("id");
-  const p = byId[id];
+const id = new URLSearchParams(location.search).get("id");
+const topEl = document.getElementById("top"), formEl = document.getElementById("form"), footEl = document.getElementById("foot");
+let lastKey = null, formBuilt = false;
 
-  function add(tag, text, cls) {
-    const e = document.createElement(tag);
-    if (text !== undefined) e.textContent = text;
-    if (cls) e.className = cls;
-    main.appendChild(e); return e;
-  }
+function add(parent, tag, text, cls) {
+  const e = document.createElement(tag);
+  if (text !== undefined) e.textContent = text;
+  if (cls) e.className = cls;
+  parent.appendChild(e); return e;
+}
+function link(href, text) {
+  const a = document.createElement("a"); a.href = href; a.textContent = text; return a;
+}
 
-  if (!p) { add("h1", "Poem not found"); return; }
-  document.title = p.title;
-
-  add("h1", p.title);
-  add("p", p.author ? "by " + p.author : "", "by");
-  add("p", p.poem, "poem");
-
-  if (p.parentPoem) {
-    add("h2", "The rule this poem followed");
-    add("p", p.parentPoem.rule, "rule");
-    const f = add("p", "", "note");
-    const a = document.createElement("a");
-    a.href = "poem.html?id=" + encodeURIComponent(p.parentPoem.id);
-    a.textContent = "From: " + p.parentPoem.title;
-    f.appendChild(a);
-  }
-
-  add("h2", "Rule for the poems that follow");
-  add("p", p.rule, "rule");
-
-  if (p.kids.length) {
-    add("h2", "Poems that followed");
-    const ul = add("ul");
-    p.kids.forEach(k => {
-      const li = document.createElement("li"), a = document.createElement("a");
-      a.href = "poem.html?id=" + encodeURIComponent(k.id);
-      a.textContent = k.title + (k.author ? " (" + k.author + ")" : "");
-      li.appendChild(a); ul.appendChild(li);
-    });
-  }
-
-  add("h2", "Write a poem that follows this rule");
+function buildForm(p) {
+  add(formEl, "h2", "Write a poem that follows this rule");
   if (CONFIG.formUrl && CONFIG.formParentField) {
     const sep = CONFIG.formUrl.includes("?") ? "&" : "?";
     const src = CONFIG.formUrl + sep + "embedded=true&" +
       encodeURIComponent(CONFIG.formParentField) + "=" + encodeURIComponent(p.id);
-    const fr = add("iframe"); fr.src = src; fr.title = "Submit a poem";
-    const n = add("p", "", "note");
-    const a = document.createElement("a"); a.href = src; a.textContent = "Open the form in its own page";
-    n.appendChild(a);
+    const fr = add(formEl, "iframe"); fr.src = src; fr.title = "Submit a poem";
+    add(formEl, "p", "", "note").appendChild(link(src, "Open the form in its own page"));
   } else {
-    add("p", "The submission form isn’t connected yet. Add your form details in config.js.", "note");
+    add(formEl, "p", "The submission form isn’t connected yet. Add your form details in config.js.", "note");
   }
-  if (sample) add("p", "Showing sample poems.", "note");
-  add("hr");
-})();
+}
+
+function render(data) {
+  const key = data.sig + "|" + data.final;
+  if (key === lastKey) return;
+  lastKey = key;
+
+  const p = data.byId[id];
+  if (!p) {
+    if (!data.final) return;            // the saved copy may just be out of date
+    topEl.replaceChildren(); formEl.replaceChildren(); footEl.replaceChildren(); formBuilt = false;
+    add(topEl, "h1", "Poem not found");
+    return;
+  }
+  document.title = p.title;
+  topEl.replaceChildren(); footEl.replaceChildren();
+
+  add(topEl, "h1", p.title);
+  add(topEl, "p", p.author ? "by " + p.author : "", "by");
+  add(topEl, "p", p.poem, "poem");
+
+  if (p.parentPoem) {
+    add(topEl, "h2", "The rule this poem followed");
+    add(topEl, "p", p.parentPoem.rule, "rule");
+    add(topEl, "p", "", "note").appendChild(
+      link("poem.html?id=" + encodeURIComponent(p.parentPoem.id), "From: " + p.parentPoem.title));
+  }
+
+  add(topEl, "h2", "Rule for the poems that follow");
+  add(topEl, "p", p.rule, "rule");
+
+  if (p.kids.length) {
+    add(topEl, "h2", "Poems that followed");
+    const ul = add(topEl, "ul");
+    p.kids.forEach(k => {
+      const li = add(ul, "li");
+      li.appendChild(link("poem.html?id=" + encodeURIComponent(k.id),
+        k.title + (k.author ? " (" + k.author + ")" : "")));
+    });
+  }
+
+  if (!formBuilt) { buildForm(p); formBuilt = true; }   // built once, so it never reloads
+
+  if (data.sample) add(footEl, "p", "Showing sample poems.", "note");
+  add(footEl, "hr");
+}
+
+loadPoems(render);
 </script>
 </body>
 </html>
