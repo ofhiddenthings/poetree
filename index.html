@@ -39,13 +39,20 @@
     a.href = "poem.html?id=" + encodeURIComponent(p.id);
     a.style.cssText = `left:${p.x}px;top:${p.y}px;width:${S}px;height:${S}px`;
     const b = document.createElement("b"); b.textContent = p.title;
-    const t = document.createElement("p"); t.textContent = p.poem;
+    const t = document.createElement("p");
+    p.poem.split(/\r?\n/).forEach(line => {
+      const d = document.createElement("div"); d.textContent = line || "\u00a0"; t.appendChild(d);
+    });
     a.append(b, t); canvas.appendChild(a);
 
     p.kids.forEach(k => {
-      const x1 = p.x + S / 2, y1 = p.y + S, x2 = k.x + S / 2, y2 = k.y - 1, m = (y1 + y2) / 2;
+      const x1 = p.x + S / 2, y1 = p.y + S, x2 = k.x + S / 2, y2 = k.y - 1;
+      const yEnd = y2 - 8, ym = (y1 + yEnd) / 2, dx = x2 - x1, sg = Math.sign(dx);
+      const r = Math.min(24, Math.abs(dx) / 2, (yEnd - y1) / 2);
       const path = document.createElementNS(NS, "path");
-      path.setAttribute("d", `M${x1} ${y1}C${x1} ${m} ${x2} ${m} ${x2} ${y2 - 7}`);
+      path.setAttribute("d", dx === 0
+        ? `M${x1} ${y1}V${yEnd}`
+        : `M${x1} ${y1}V${ym - r}Q${x1} ${ym} ${x1 + sg * r} ${ym}H${x2 - sg * r}Q${x2} ${ym} ${x2} ${ym + r}V${yEnd}`);
       const h = document.createElementNS(NS, "polygon");
       h.setAttribute("points", `${x2},${y2} ${x2 - 4},${y2 - 8} ${x2 + 4},${y2 - 8}`);
       svg.append(path, h);

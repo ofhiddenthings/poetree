@@ -29,8 +29,9 @@ a { color: inherit; }
   background: var(--bg); border: 1px solid var(--line); color: var(--ink); text-decoration: none; line-height: 1.3; }
 .box:hover, .box:focus-visible { background: #f4f4f4; outline: none; }
 .box b { display: block; margin-bottom: 6px; font-size: 15px; }
-.box p { margin: 0; font-size: 12px; line-height: 1.4; color: var(--soft); white-space: pre-line;
-  display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+.box p { margin: 0; font-size: 12px; line-height: 1.4; color: var(--soft);
+  max-height: calc(6 * 1.4em); overflow: hidden; }
+.box p div { padding-left: 1em; text-indent: -1em; }
 
 /* Poem page */
 main { max-width: 34rem; margin: 0 auto; padding: 32px 24px 64px; }
